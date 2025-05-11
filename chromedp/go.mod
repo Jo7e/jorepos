@@ -6,7 +6,7 @@ toolchain go1.22.4
 
 require (
 	github.com/chromedp/chromedp v0.9.5
-	github.com/jo7e/jorepos/log v0.0.0-00010101000000-000000000000
+	github.com/jo7e/jorepos/log v0.1.2
 )
 
 require (
@@ -30,5 +30,3 @@ require (
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/sys v0.16.0 // indirect
 )
-
-replace github.com/jo7e/jorepos/log => ../log
