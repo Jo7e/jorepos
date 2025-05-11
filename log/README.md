@@ -1,13 +1,23 @@
 # Log Package
 
-A customized wrapper around [charmbracelet/log](https://github.com/charmbracelet/log) with sensible defaults and additional convenience methods.
+A customized wrapper around [charmbracelet/log](https://github.com/charmbracelet/log) with sensible defaults, environment variable configuration, and custom styling.
 
 ## Features
 
 - Pre-configured with reasonable defaults
-- Simple interface that matches the standard library's log package
+- Environment variable configuration
+- Custom styling with [charmbracelet/lipgloss](https://github.com/charmbracelet/lipgloss)
 - Built-in support for structured logging
-- Pretty output formatting using charmbracelet's styling
+
+## Configuration
+
+The logger can be configured using the following environment variables:
+
+```
+LOG_LEVEL=debug|info|warn|error  # Sets the log level (defaults to info)
+LOG_TIMESTAMP=true               # Enables timestamp reporting
+LOG_CALLER=true                  # Enables caller reporting
+```
 
 ## Usage
 
@@ -15,21 +25,20 @@ A customized wrapper around [charmbracelet/log](https://github.com/charmbracelet
 package main
 
 import (
+	"os"
+
 	"github.com/jo7e/jorepos/log"
 )
 
 func main() {
-	// Use default logger
+	// Initialize the default logger with environment variable configuration
+	log.DefaultLogger()
+	
+	// Use the configured default logger
 	log.Info("Hello, world!")
 	
 	// With fields
-	log.WithFields(log.Fields{
-		"user": "jo7e",
-		"action": "login",
-	}).Info("User logged in")
-	
-	// Change log level
-	log.SetLevel(log.DebugLevel)
+	log.With("user", "jo7e").With("action", "login").Info("User logged in")
 	
 	// Debug logs (only visible when level is Debug or lower)
 	log.Debug("Debug message")
@@ -39,22 +48,27 @@ func main() {
 }
 ```
 
-## Custom Logger
+## Custom Styling
+
+The package provides custom styling for logs using lipgloss:
 
 ```go
 package main
 
 import (
 	"os"
-	
 	"github.com/jo7e/jorepos/log"
 )
 
 func main() {
-	// Create a custom logger with file output
-	f, _ := os.Create("app.log")
-	logger := log.WithOutput(f)
+	// Create a custom logger
+	logger := log.New(os.Stdout)
 	
-	logger.Info("This will be written to app.log")
+	// Apply custom styles
+	logger = log.ApplyStyles(logger)
+	
+	logger.Info("This message will use custom styling")
 }
 ```
+
+The styling includes custom colors for prefixes and various log elements to improve readability.
