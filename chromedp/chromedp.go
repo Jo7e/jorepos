@@ -13,7 +13,6 @@ import (
 type Browser struct {
 	ctx    context.Context
 	cancel context.CancelFunc
-	logger *log.Logger
 }
 
 // Options contains configuration options for the browser
@@ -24,8 +23,6 @@ type Options struct {
 	Timeout time.Duration
 	// UserAgent is the custom user agent string
 	UserAgent string
-	// Logger is an optional custom logger
-	Logger *log.Logger
 	// ExtraOptions contains additional chromedp options
 	ExtraOptions []chromedp.ExecAllocatorOption
 }
@@ -33,20 +30,15 @@ type Options struct {
 // DefaultOptions returns the default browser options
 func DefaultOptions() Options {
 	return Options{
-		Headless: true,
-		Timeout:  30 * time.Second,
+		Headless:  true,
+		Timeout:   30 * time.Second,
 		UserAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 	}
 }
 
 // New creates a new browser instance with the provided options
 func New(opts Options) *Browser {
-	logger := opts.Logger
-	if logger == nil {
-		logger = log.New()
-	}
-
-	logger.Debug("Initializing browser")
+	log.Debug("Initializing browser")
 
 	// Set up the options
 	options := []chromedp.ExecAllocatorOption{
@@ -62,24 +54,26 @@ func New(opts Options) *Browser {
 	options = append(options, opts.ExtraOptions...)
 
 	// Create the browser context
-	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), options...)
-	ctx, _ := chromedp.NewContext(allocCtx)
+	allocCtx, allocCancel := chromedp.NewExecAllocator(context.Background(), options...)
+	ctx, cancel := chromedp.NewContext(allocCtx)
 
 	// Create a timeout if specified
 	if opts.Timeout > 0 {
-		ctx, _ = context.WithTimeout(ctx, opts.Timeout)
+		ctx, cancel = context.WithTimeout(ctx, opts.Timeout)
 	}
 
 	return &Browser{
-		ctx:    ctx,
-		cancel: cancel,
-		logger: logger,
+		ctx: ctx,
+		cancel: func() {
+			cancel()
+			allocCancel()
+		},
 	}
 }
 
 // Navigate navigates to the specified URL
 func (b *Browser) Navigate(url string) error {
-	b.logger.Info("Navigating to URL", "url", url)
+	log.Info("Navigating to URL", "url", url)
 	return chromedp.Run(b.ctx, chromedp.Navigate(url))
 }
 
@@ -88,7 +82,7 @@ func (b *Browser) Screenshot(selector string) ([]byte, error) {
 	var buf []byte
 	var err error
 
-	b.logger.Debug("Taking screenshot", "selector", selector)
+	log.Debug("Taking screenshot", "selector", selector)
 
 	if selector == "" {
 		// Full page screenshot
@@ -99,7 +93,7 @@ func (b *Browser) Screenshot(selector string) ([]byte, error) {
 	}
 
 	if err != nil {
-		b.logger.Error("Failed to take screenshot", "error", err)
+		log.Error("Failed to take screenshot", "error", err)
 		return nil, err
 	}
 
@@ -110,10 +104,10 @@ func (b *Browser) Screenshot(selector string) ([]byte, error) {
 func (b *Browser) Text(selector string) (string, error) {
 	var text string
 
-	b.logger.Debug("Extracting text", "selector", selector)
+	log.Debug("Extracting text", "selector", selector)
 	err := chromedp.Run(b.ctx, chromedp.Text(selector, &text))
 	if err != nil {
-		b.logger.Error("Failed to extract text", "selector", selector, "error", err)
+		log.Error("Failed to extract text", "selector", selector, "error", err)
 		return "", err
 	}
 
@@ -122,14 +116,14 @@ func (b *Browser) Text(selector string) (string, error) {
 
 // Click performs a click action on an element
 func (b *Browser) Click(selector string) error {
-	b.logger.Debug("Clicking element", "selector", selector)
+	log.Debug("Clicking element", "selector", selector)
 	return chromedp.Run(b.ctx, chromedp.Click(selector))
 }
 
 // Type types text into an input field
 func (b *Browser) Type(selector, text string) error {
-	b.logger.Debug("Typing text", "selector", selector)
-	return chromedp.Run(b.ctx, 
+	log.Debug("Typing text", "selector", selector)
+	return chromedp.Run(b.ctx,
 		chromedp.Click(selector),
 		chromedp.SendKeys(selector, text),
 	)
@@ -137,18 +131,18 @@ func (b *Browser) Type(selector, text string) error {
 
 // WaitVisible waits for an element to be visible
 func (b *Browser) WaitVisible(selector string) error {
-	b.logger.Debug("Waiting for element", "selector", selector)
+	log.Debug("Waiting for element", "selector", selector)
 	return chromedp.Run(b.ctx, chromedp.WaitVisible(selector))
 }
 
 // Execute runs a custom set of actions
 func (b *Browser) Execute(actions ...chromedp.Action) error {
-	b.logger.Debug("Executing custom actions")
+	log.Debug("Executing custom actions")
 	return chromedp.Run(b.ctx, actions...)
 }
 
 // Close closes the browser
 func (b *Browser) Close() {
-	b.logger.Debug("Closing browser")
+	log.Debug("Closing browser")
 	b.cancel()
 }
