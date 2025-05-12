@@ -15,6 +15,9 @@ type Browser struct {
 	cancel context.CancelFunc
 }
 
+type ExtraOptions []chromedp.ExecAllocatorOption
+var DefaultExecAllocatorOptions = chromedp.DefaultExecAllocatorOptions
+
 // Options contains configuration options for the browser
 type Options struct {
 	// Headless determines if the browser runs in headless mode
@@ -24,7 +27,7 @@ type Options struct {
 	// UserAgent is the custom user agent string
 	UserAgent string
 	// ExtraOptions contains additional chromedp options
-	ExtraOptions []chromedp.ExecAllocatorOption
+	ExtraOptions ExtraOptions
 }
 
 // DefaultOptions returns the default browser options
@@ -69,6 +72,16 @@ func New(opts Options) *Browser {
 			allocCancel()
 		},
 	}
+}
+
+// Flag creates an allocator option for a command line flag
+func Flag(name string, value any) chromedp.ExecAllocatorOption {
+	return chromedp.Flag(name, value)
+}
+
+// Sleep creates an action to pause for a specified duration
+func Sleep(duration time.Duration) chromedp.Action {
+	return chromedp.Sleep(duration)
 }
 
 // Navigate navigates to the specified URL
