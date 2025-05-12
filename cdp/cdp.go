@@ -1,5 +1,5 @@
-// Package chromedp provides a simplified interface to the chromedp browser automation library
-package chromedp
+// Package cdp provides a simplified interface to the chromedp browser automation library
+package cdp
 
 import (
 	"context"

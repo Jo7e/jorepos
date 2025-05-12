@@ -1,4 +1,4 @@
-module github.com/jo7e/jorepos/chromedp
+module github.com/jo7e/jorepos/cdp
 
 go 1.23
 
