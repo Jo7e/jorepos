@@ -1,4 +1,4 @@
-# ChromeDP Package
+# CDP Package
 
 A simplified wrapper around the [chromedp](https://github.com/chromedp/chromedp) browser automation library for Go.
 
@@ -19,13 +19,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/jo7e/jorepos/chromedp"
+	"github.com/jo7e/jorepos/cdp"
 	"github.com/jo7e/jorepos/log"
 )
 
 func main() {
 	// Create a new browser with default options (headless mode)
-	browser := chromedp.New(chromedp.DefaultOptions())
+	browser := cdp.New(cdp.DefaultOptions())
 	defer browser.Close()
 
 	// Navigate to a website
@@ -64,8 +64,7 @@ package main
 import (
 	"time"
 
-	"github.com/chromedp/chromedp"
-	"github.com/jo7e/jorepos/chromedp"
+	"github.com/jo7e/jorepos/cdp"
 	"github.com/jo7e/jorepos/log"
 )
 
@@ -75,15 +74,10 @@ func main() {
 	logger.SetLevel(log.DebugLevel)
 
 	// Create a browser with custom options
-	browser := chromedp.New(chromedp.Options{
+	browser := cdp.New(cdp.Options{
 		Headless:  false,                // Show the browser
 		Timeout:   60 * time.Second,     // Longer timeout
 		UserAgent: "Custom User Agent",  // Custom user agent
-		Logger:    logger,               // Custom logger
-		ExtraOptions: []chromedp.ExecAllocatorOption{
-			chromedp.WindowSize(1920, 1080),
-			chromedp.NoSandbox, 
-		},
 	})
 	defer browser.Close()
 
