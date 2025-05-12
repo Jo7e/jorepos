@@ -134,31 +134,19 @@ func (b *Browser) Text(selector string) (string, error) {
 	return text, nil
 }
 
-// Click performs a click action on an element
-func (b *Browser) Click(selector string) error {
-	log.Debug("Clicking element", "selector", selector)
-	return chromedp.Run(b.ctx, chromedp.Click(selector))
-}
-
 // Type types text into an input field
 func (b *Browser) Type(selector, text string) error {
 	log.Debug("Typing text", "selector", selector)
 	return chromedp.Run(b.ctx,
-		chromedp.Click(selector),
-		chromedp.SendKeys(selector, text),
+		chromedp.Click(selector, chromedp.ByQuery),
+		chromedp.SendKeys(selector, text, chromedp.ByQuery),
 	)
 }
 
 // WaitVisible waits for an element to be visible
 func (b *Browser) WaitVisible(selector string) error {
 	log.Debug("Waiting for element", "selector", selector)
-	return chromedp.Run(b.ctx, chromedp.WaitVisible(selector))
-}
-
-// Execute runs a custom set of actions
-func (b *Browser) Execute(actions ...chromedp.Action) error {
-	log.Debug("Executing custom actions")
-	return chromedp.Run(b.ctx, actions...)
+	return chromedp.Run(b.ctx, chromedp.WaitVisible(selector, chromedp.ByQuery))
 }
 
 // Close closes the browser
