@@ -16,6 +16,7 @@ type Browser struct {
 }
 
 type ExtraOptions []chromedp.ExecAllocatorOption
+
 var DefaultExecAllocatorOptions = chromedp.DefaultExecAllocatorOptions
 
 // Options contains configuration options for the browser
@@ -80,8 +81,14 @@ func Flag(name string, value any) chromedp.ExecAllocatorOption {
 }
 
 // Sleep creates an action to pause for a specified duration
-func Sleep(duration time.Duration) chromedp.Action {
-	return chromedp.Sleep(duration)
+func (b *Browser) Sleep(duration time.Duration) error {
+	log.Debug("Sleeping for duration", "duration", duration)
+	return chromedp.Run(b.ctx, chromedp.Sleep(duration))
+}
+
+// Run executes a set of chromedp actions
+func (b *Browser) Run(actions ...chromedp.Action) error {
+	return chromedp.Run(b.ctx, actions...)
 }
 
 // Navigate navigates to the specified URL
