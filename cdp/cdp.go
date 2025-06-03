@@ -11,6 +11,7 @@ import (
 
 // Browser represents a browser instance with simplified chromedp functionality
 type Browser struct {
+	HumanizeOptions
 	ctx    context.Context
 	cancel context.CancelFunc
 }
@@ -18,6 +19,17 @@ type Browser struct {
 type ExtraOptions []chromedp.ExecAllocatorOption
 
 var DefaultExecAllocatorOptions = chromedp.DefaultExecAllocatorOptions
+
+type HumanizeOptions struct {
+	// AfterActionMinWaitTime is the lower limit to wait a random amount of miliseconds after an action
+	AfterActionMinWaitTime int
+	// AfterActionMaxWaitTime is the upper limit to wait a random amount of miliseconds after an action
+	AfterActionMaxWaitTime int
+	// TypingWaitMinTime is the upper limit to wait a random amount of miliseconds between key strokes
+	TypingWaitMinTime int
+	// TypingWaitMaxTime is the upper limit to wait a random amount of miliseconds between key strokes
+	TypingWaitMaxTime int
+}
 
 // Options contains configuration options for the browser
 type Options struct {
@@ -27,16 +39,25 @@ type Options struct {
 	Timeout time.Duration
 	// UserAgent is the custom user agent string
 	UserAgent string
+	// HumanizeOptions defines ways to humanize the automation on chromedp
+	HumanizeOptions *HumanizeOptions
 	// ExtraOptions contains additional chromedp options
 	ExtraOptions ExtraOptions
 }
 
 // DefaultOptions returns the default browser options
 func DefaultOptions() Options {
+	h := HumanizeOptions{
+		AfterActionMinWaitTime: 500,
+		AfterActionMaxWaitTime: 2000,
+		TypingWaitMinTime:      50,
+		TypingWaitMaxTime:      150,
+	}
 	return Options{
-		Headless:  true,
-		Timeout:   30 * time.Second,
-		UserAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+		Headless:        true,
+		Timeout:         30 * time.Second,
+		HumanizeOptions: &h,
+		UserAgent:       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 	}
 }
 
@@ -67,7 +88,8 @@ func New(opts Options) *Browser {
 	}
 
 	return &Browser{
-		ctx: ctx,
+		ctx:             ctx,
+		HumanizeOptions: *opts.HumanizeOptions,
 		cancel: func() {
 			cancel()
 			allocCancel()
@@ -81,9 +103,9 @@ func Flag(name string, value any) chromedp.ExecAllocatorOption {
 }
 
 // Sleep creates an action to pause for a specified duration
-func (b *Browser) Sleep(duration time.Duration) error {
+func (b *Browser) Sleep(duration time.Duration) chromedp.Action {
 	log.Debug("Sleeping for duration", "duration", duration)
-	return chromedp.Run(b.ctx, chromedp.Sleep(duration))
+	return chromedp.Sleep(duration)
 }
 
 // Run executes a set of chromedp actions
@@ -132,15 +154,6 @@ func (b *Browser) Text(selector string) (string, error) {
 	}
 
 	return text, nil
-}
-
-// Type types text into an input field
-func (b *Browser) Type(selector, text string) error {
-	log.Debug("Typing text", "selector", selector)
-	return chromedp.Run(b.ctx,
-		chromedp.Click(selector, chromedp.ByQuery),
-		chromedp.SendKeys(selector, text, chromedp.ByQuery),
-	)
 }
 
 // WaitVisible waits for an element to be visible
