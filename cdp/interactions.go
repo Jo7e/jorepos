@@ -29,6 +29,7 @@ func (b *Browser) Type(selector, text string) chromedp.Action {
 		log.Debug("Typing text", "selector", selector)
 		if err := chromedp.Run(b.ctx,
 			b.HumanTyping(selector, text),
+			b.HumanAfterAction(),
 		); err != nil {
 			return err
 		}
